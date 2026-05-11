@@ -32,10 +32,11 @@ int main(void)
     Color fondo = { 110, 100, 215, 255 };
     Color textoPrincipal = RAYWHITE;
     Color textoSecundario = DARKPURPLE;
+    Color cumpleanosColor = VIOLET;
     Color sueloColor = Fade(DARKGREEN, 0.7f);
 
     // Mundo físico
-    b2Vec2 gravity(0.0f, 9.8f);
+    b2Vec2 gravity(0.0f, 40.0f);
     b2World world(gravity);
 
     // -----------------------------
@@ -102,7 +103,30 @@ int main(void)
 
         circles.push_back({ circleBody, 20.0f, Fade(ORANGE, 0.95f) });
     }
+	// -----------------------------
+    // Proyectil - cuerpo dinamico cerca del suelo
+    // listo para ser lanzado con ESPACIO
+	// ------------------------------ 
+    b2BodyDef proyectilDef;
+	proyectilDef.type = b2_dynamicBody;
+	proyectilDef.position.Set(100.0f, screenHeight - 120.0f);
 
+	b2Body* proyectilBody = world.CreateBody(&proyectilDef);
+
+	b2PolygonShape proyectilShape;
+	proyectilShape.SetAsBox(20.0f, 20.0f);
+
+	b2FixtureDef proyectilFixture;
+	proyectilFixture.shape = &proyectilShape;
+	proyectilFixture.density = 1.0f;
+	proyectilFixture.friction = 0.3f;
+	proyectilFixture.restitution = 0.4f;
+
+	proyectilBody->CreateFixture(&proyectilFixture);
+
+    boxes.push_back({ proyectilBody, 40.0f, 40.0f, RED });
+
+    bool lanzado = false;
 
 	float anguloActual = 0.0f;
     const float PASO_ROTACION = 5.0f;
@@ -114,29 +138,11 @@ int main(void)
 
         if (IsKeyPressed(KEY_SPACE))
         {
-            b2BodyDef newDef;
-            newDef.type = b2_dynamicBody;
-            newDef.position.Set(screenWidth / 2.0f, 50.0f);
-
-            b2Body* newBody = world.CreateBody(&newDef);
-
+            proyectilBody->SetAwake(true);
+            // Definir el vector impulso antes de usarlo
+            b2Vec2 impulso(5000000.0f, -8000000.0f);
+            proyectilBody->ApplyLinearImpulse(impulso, proyectilBody->GetWorldCenter(), true);
             
-            b2Transform xf;
-            xf.p = newBody->GetPosition();
-            xf.q.Set(anguloActual * DEG2RAD);
-            newBody->SetTransform(xf.p, xf.q.GetAngle());
-
-            b2PolygonShape newShape;
-            newShape.SetAsBox(25.0f, 25.0f);
-
-            b2FixtureDef newFixture;
-            newFixture.shape = &newShape;
-            newFixture.density = 1.0f;
-            newFixture.friction = 0.4f;
-            newFixture.restitution = 0.2f;
-
-            newBody->CreateFixture(&newFixture);
-            boxes.push_back({ newBody, 50.0f, 50.0f, Fade(LIME, 0.95f) });
         }
 
         // Avanzar simulación
@@ -176,15 +182,19 @@ int main(void)
 
         // Panel superior
         DrawRectangle(90, 70, 820, 90, Fade(BLACK, 0.18f));
-        DrawText("Bienvenidos a Modelos y Algoritmos para Videojuegos II", 120, 90, 28, textoPrincipal);
+        DrawText("La Catapulta de Mavix", 280, 90, 28, textoPrincipal);
         DrawText("Raylib dibuja. Box2D simula.", 320, 125, 22, textoSecundario);
 
         DrawRectangle(0, 0, 420, 60, Fade(BLACK, 0.4f));
         DrawText(TextFormat("Angulo: %.1f grados", anguloActual), 10, 8, 20, YELLOW);
-		DrawText("Flechas: rotar ESPACIO: crear caja", 10, 34, 16, LIGHTGRAY);
+        if (!lanzado) {
+			DrawText("ESPACIO: lanzar proyectil (rojo)", 10, 8, 20, YELLOW);
+        }else {
+            DrawText("Proyectil lanzado!", 10, 34, 16, GREEN);
+        }
 
         // Pie
-        DrawText("Primer contacto con simulacion fisica en 2D", 300, 540, 20, RAYWHITE);
+        DrawText("Impulso aplicado con componente horizontal y vertical", 200, 540, 20, RAYWHITE);
 
         EndDrawing();
     }
