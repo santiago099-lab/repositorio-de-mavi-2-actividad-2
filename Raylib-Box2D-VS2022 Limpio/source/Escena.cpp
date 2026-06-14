@@ -13,7 +13,6 @@ void Escena::Init(int w, int h) {
     b2Vec2 gravedad(0.0f, 980.0f);
     mundo = new b2World(gravedad);
 
-    
     b2BodyDef sueloDef;
     sueloDef.type = b2_staticBody;
     sueloDef.position.Set(w / 2.0f, h - 20.0f);
@@ -29,9 +28,9 @@ void Escena::Step(float dt) {
 }
 
 void Escena::Draw() const {
-    ClearBackground({ 30, 30, 60, 255 });
-    DrawRectangle(0, screenHeight - 40, screenWidth, 40, DARKGREEN);
-    DrawLine(0, screenHeight - 40, screenWidth, screenHeight - 40, GREEN);
+    ClearBackground({ 20, 20, 40, 255 });
+    DrawRectangle(0, screenHeight - 40, screenWidth, 40, DARKBROWN);
+    DrawLine(0, screenHeight - 40, screenWidth, screenHeight - 40, BROWN);
 }
 
 b2World* Escena::GetWorld() { return mundo; }

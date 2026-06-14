@@ -18,7 +18,7 @@
     <ClInclude Include="Escena.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="PendulodeNewton.h">
+    <ClInclude Include="Plataforma.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -26,10 +26,10 @@
     <ClCompile Include="Escena.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Pendulodenewton.cpp">
+    <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Main.cpp">
+    <ClCompile Include="Plataforma.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
