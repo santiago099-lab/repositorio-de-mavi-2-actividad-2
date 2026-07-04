@@ -19,13 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Escena.h" />
-    <ClInclude Include="Plataforma.h" />
+    <ClInclude Include="Mundo.h" />
+    <ClInclude Include="Objetivo.h" />
+    <ClInclude Include="Proyectil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Escena.cpp" />
-    <ClCompile Include="Plataforma.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Mundo.cpp" />
+    <ClCompile Include="Objetivo.cpp" />
+    <ClCompile Include="Proyectil.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
