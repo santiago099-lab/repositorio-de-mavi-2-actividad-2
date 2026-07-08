@@ -1,122 +1,119 @@
 #include "raylib.h"
 #include "Mundo.h"
-#include "Proyectil.h"
-#include "Objetivo.h"
+#include "Lanzador.h"
+#include "ZonaSensor.h"
+#include <cmath>
 
+enum Estado { WAITING, RUNNING, EVENT_DETECTED, FINISHED };
 
-enum Estado {WAITING,RUNNING,EVENT_DETECTED,FINISHED};      
-         
-int main(void)
-{
+int main(void) {
     const int screenWidth = 1000;
     const int screenHeight = 600;
-
-    InitWindow(screenWidth, screenHeight, "MAVI II - Tiro al Objetivo");
+    InitWindow(screenWidth, screenHeight, "MAVI II - Sistema de Lanzamiento");
     SetTargetFPS(60);
 
-    
     Mundo mundo;
     mundo.Init(screenWidth, screenHeight);
 
-    Proyectil proyectil;
-    proyectil.Init(mundo.GetWorld(), screenWidth / 2.0f, 80.0f);
+    Lanzador lanzador;
+    float lanzX = 120.0f;
+    float lanzY = screenHeight - 80.0f;
+    lanzador.Init(mundo.GetWorld(), lanzX, lanzY);
 
-    
-    Objetivo objetivo;
-    objetivo.Init(mundo.GetWorld(), screenWidth / 2.0f, screenHeight / 2.0f);
+    ZonaSensor zona;
+    zona.Init(mundo.GetWorld(), 750.0f, screenHeight - 120.0f, 150.0f, 160.0f);
 
     Estado estado = WAITING;
-    float  timerMsg = 0.0f;  
+    float  timerMsg = 0.0f;
+    int    intentos = 0;
     int    aciertos = 0;
 
-    while (!WindowShouldClose())
-    {
+    while (!WindowShouldClose()) {
         float dt = GetFrameTime();
 
-       
-        if (estado == WAITING && IsKeyPressed(KEY_SPACE)) {
-            
-            proyectil.Reset(screenWidth / 2.0f, 80.0f);
-            estado = RUNNING;
-            mundo.GetListener()->Reset();
+        if (estado == WAITING) {
+            if (IsKeyDown(KEY_W)) lanzador.AjustarAngulo(1);
+            if (IsKeyDown(KEY_S)) lanzador.AjustarAngulo(-1);
+            if (IsKeyDown(KEY_D)) lanzador.AjustarPotencia(1);
+            if (IsKeyDown(KEY_A)) lanzador.AjustarPotencia(-1);
+            if (IsKeyPressed(KEY_SPACE)) {
+                lanzador.Disparar();
+                estado = RUNNING;
+                intentos++;
+                mundo.GetListener()->Reset();
+            }
         }
 
-        if ((estado == EVENT_DETECTED || estado == FINISHED) && IsKeyPressed(KEY_R)) {
-            
-            proyectil.Reset(screenWidth / 2.0f, 80.0f);
+        if (IsKeyPressed(KEY_R)) {
+            lanzador.Reset(lanzX, lanzY);
             mundo.GetListener()->Reset();
             estado = WAITING;
+            timerMsg = 0.0f;
         }
 
         if (estado == RUNNING) {
-            
-            if (mundo.GetListener()->EventoDetectado()) {
+            if (mundo.GetListener()->DentroDelSensor()) {
                 estado = EVENT_DETECTED;
-                timerMsg = 2.0f;
+                timerMsg = 3.0f;
                 aciertos++;
             }
-
-            
-            b2Vec2 pos = proyectil.GetBody()->GetPosition();
-            if (pos.y > screenHeight - 40) {
+            b2Vec2 pos = lanzador.GetBody()->GetPosition();
+            if (pos.y > screenHeight - 50 && !mundo.GetListener()->DentroDelSensor()) {
                 estado = FINISHED;
-                timerMsg = 2.0f;
+                timerMsg = 3.0f;
             }
         }
 
-        if (estado == EVENT_DETECTED) {
+        if (estado == EVENT_DETECTED || estado == FINISHED) {
             timerMsg -= dt;
-            if (timerMsg <= 0.0f) estado = WAITING;
-        }
-
-        if (estado == FINISHED) {
-            timerMsg -= dt;
-            if (timerMsg <= 0.0f) estado = WAITING;
+            if (timerMsg <= 0.0f) {
+                lanzador.Reset(lanzX, lanzY);
+                mundo.GetListener()->Reset();
+                estado = WAITING;
+            }
         }
 
         mundo.Step(dt);
 
         BeginDrawing();
-
         mundo.Draw();
-        objetivo.Draw(estado == EVENT_DETECTED);
-        proyectil.Draw();
+        zona.Draw(mundo.GetListener()->DentroDelSensor());
+        lanzador.Draw();
 
-        
-        DrawRectangle(0, 0, 500, 90, Fade(BLACK, 0.5f));
-        DrawText("MAVI II - Tiro al Objetivo", 10, 10, 22, RAYWHITE);
-        DrawText("b2ContactListener: deteccion de colision", 10, 40, 15, YELLOW);
-        DrawText(TextFormat("Aciertos: %d", aciertos), 10, 60, 18, GREEN);
+        DrawRectangle(0, 0, 360, 140, ColorAlpha(BLACK, 0.55f));
+        DrawText("MAVI II - Sistema de Lanzamiento", 10, 8, 18, RAYWHITE);
+        DrawText("W/S: ajustar angulo", 10, 35, 15, LIGHTGRAY);
+        DrawText("A/D: ajustar potencia", 10, 55, 15, LIGHTGRAY);
+        DrawText("ESPACIO: disparar  |  R: reiniciar", 10, 75, 15, LIGHTGRAY);
+        DrawText(TextFormat("Angulo:   %.0f grados", lanzador.GetAngulo()), 10, 100, 15, YELLOW);
+        DrawText(TextFormat("Potencia: %.0f", lanzador.GetPotencia()), 10, 118, 15, YELLOW);
 
-        
-        if (estado == WAITING) {
-            DrawText("ESPACIO: lanzar proyectil   R: reiniciar", 10, screenHeight - 30, 18, LIGHTGRAY);
-                
+        DrawRectangle(screenWidth - 200, 0, 200, 60, ColorAlpha(BLACK, 0.55f));
+        DrawText(TextFormat("Intentos: %d", intentos), screenWidth - 190, 10, 16, WHITE);
+        DrawText(TextFormat("Aciertos: %d", aciertos), screenWidth - 190, 32, 16, GREEN);
+
+        const char* estadoStr = "";
+        Color estadoColor = WHITE;
+        switch (estado) {
+        case WAITING:        estadoStr = "Estado: WAITING";        estadoColor = LIGHTGRAY; break;
+        case RUNNING:        estadoStr = "Estado: RUNNING";        estadoColor = YELLOW;    break;
+        case EVENT_DETECTED: estadoStr = "Estado: EVENT_DETECTED"; estadoColor = GREEN;     break;
+        case FINISHED:       estadoStr = "Estado: FINISHED";       estadoColor = RED;       break;
         }
+        DrawText(estadoStr, screenWidth / 2 - MeasureText(estadoStr, 18) / 2,
+            screenHeight - 30, 18, estadoColor);
 
-        
         if (estado == EVENT_DETECTED) {
-            int tw = MeasureText("IMPACTO DETECTADO!", 50);
-            DrawRectangle(0, screenHeight / 2 - 40, screenWidth, 80, Fade(BLACK, 0.7f));
-            DrawText("IMPACTO DETECTADO!", screenWidth / 2 - tw / 2, screenHeight / 2 - 25, 50, GREEN);
+            DrawRectangle(0, screenHeight / 2 - 50, screenWidth, 100, ColorAlpha(BLACK, 0.7f));
+            const char* msg = "OBJETIVO ALCANZADO!";
+            DrawText(msg, screenWidth / 2 - MeasureText(msg, 50) / 2, screenHeight / 2 - 25, 50, GREEN);
         }
 
         if (estado == FINISHED) {
-            int tw = MeasureText("Fallaste! Presiona R para reiniciar", 30);
-            DrawRectangle(0, screenHeight / 2 - 30, screenWidth, 60, Fade(BLACK, 0.7f));
-            DrawText("Fallaste! Presiona R para reiniciar", screenWidth / 2 - tw / 2, screenHeight / 2 - 15, 30, RED);
+            DrawRectangle(0, screenHeight / 2 - 50, screenWidth, 100, ColorAlpha(BLACK, 0.7f));
+            const char* msg = "FALLASTE! Intenta de nuevo...";
+            DrawText(msg, screenWidth / 2 - MeasureText(msg, 35) / 2, screenHeight / 2 - 18, 35, RED);
         }
-                
-
-        
-        const char* estadoStr = "";
-        switch (estado) {
-        case WAITING:        estadoStr = "Estado: WAITING";        break;
-        case RUNNING:        estadoStr = "Estado: RUNNING";        break;
-        case EVENT_DETECTED: estadoStr = "Estado: EVENT_DETECTED"; break;
-        case FINISHED:       estadoStr = "Estado: FINISHED";       break;
-        }
-        DrawText(estadoStr, screenWidth - 250, 10, 18, LIGHTGRAY);
 
         EndDrawing();
     }

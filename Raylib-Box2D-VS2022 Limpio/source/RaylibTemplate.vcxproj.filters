@@ -18,10 +18,10 @@
     <ClInclude Include="Mundo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Proyectil.h">
+    <ClInclude Include="Lanzador.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objetivo.h">
+    <ClInclude Include="ZonaSensor.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -29,13 +29,13 @@
     <ClCompile Include="Mundo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Proyectil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Objetivo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Lanzador.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ZonaSensor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
